@@ -188,7 +188,7 @@ function t270_scroll(hash, offset, speed) {
     var root = $("html, body");
     var target = "";
     if (speed === undefined) {
-        speed = 500;
+        speed = 400;
     }
     try {
         target = $(hash);
@@ -202,8 +202,8 @@ function t270_scroll(hash, offset, speed) {
             return !0;
         }
     }
-    var isHistoryChangeAllowed = !(window.location.hash === hash);
-    root.animate({ scrollTop: target.offset().top - offset }, speed, function () {
+    var isHistoryChangeAllowed = window.location.hash !== hash;
+    var complete = function () {
         if (!isHistoryChangeAllowed) {
             return;
         }
@@ -213,7 +213,12 @@ function t270_scroll(hash, offset, speed) {
             window.location.hash = hash;
         }
         isHistoryChangeAllowed = !1;
-    });
+    };
+    var dontChangeHistory = Boolean($(".t270").attr("data-history-disabled"));
+    if (dontChangeHistory) {
+        complete = function () {};
+    }
+    root.animate({ scrollTop: target.offset().top - offset }, speed, complete);
     return !0;
 }
 function t396_init(recid) {
@@ -251,7 +256,7 @@ function t396_init(recid) {
             "orientationuniqueid" + recid
         );
     });
-    $(window).load(function () {
+    $(window).on("load", function () {
         var ab = $("#rec" + recid).find(".t396__artboard");
         t396_allelems__renderView(ab);
         if (typeof t_lazyload_update === "function" && ab.css("overflow") === "auto") {
@@ -492,7 +497,7 @@ function t396_addImage(ab, el) {
             }
         })
         .each(function () {
-            if (this.complete) $(this).load();
+            if (this.complete) $(this).trigger("load");
         });
     el.find("img").on("tuwidget_done", function (e, file) {
         t396_elem__renderViewOneField(el, "top");
